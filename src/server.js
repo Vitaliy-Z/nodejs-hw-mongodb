@@ -51,7 +51,8 @@ export default async function setupServer() {
 
   app.use((req, res) => {
     res.json({
-      message: 'Not found',
+      status: 400,
+      message: 'Bad request',
     });
   });
 
