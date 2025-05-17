@@ -3,7 +3,11 @@ import pino from 'pino-http';
 import cors from 'cors';
 import 'dotenv/config';
 import initMongoConnection from './db/initMongoConnection.js';
-import { contactModel } from './models/constacts.js';
+
+import contactsRouter from './routers/contacts.js';
+
+import notFoundHandler from './middlewares/notFoundHandler.js';
+import errorHandler from './middlewares/errorHandler.js';
 
 export default async function setupServer() {
   const app = express();
@@ -18,48 +22,16 @@ export default async function setupServer() {
     }),
   );
 
-  app.get('/contacts', async (req, res) => {
-    const contacts = await contactModel.find();
+  app.use('/contacts', contactsRouter);
 
-    res.json({
-      status: 200,
-      message:
-        contacts.length > 0
-          ? 'Successfully found contacts!'
-          : 'Contacts is empty',
-      data: contacts,
-    });
-  });
+  app.use(notFoundHandler);
 
-  app.get('/contacts/:contactId', async (req, res) => {
-    const { contactId } = req.params;
-    const contact = await contactModel.findById(contactId);
-
-    if (contact === null) {
-      res.json({
-        status: 404,
-        message: `Contact with id ${contactId} not found!`,
-      });
-    }
-
-    res.json({
-      status: 200,
-      message: `Successfully found contact with id ${contactId}!`,
-      data: contact,
-    });
-  });
-
-  app.use((req, res) => {
-    res.json({
-      status: 400,
-      message: 'Bad request',
-    });
-  });
+  app.use(errorHandler);
 
   try {
     await initMongoConnection();
 
-    const PORT = process.env.PORT || 3000;
+    const PORT = process.env.PORT || 3333;
 
     return app.listen(PORT, (err) => {
       if (err) {
