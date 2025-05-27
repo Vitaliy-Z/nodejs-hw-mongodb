@@ -7,17 +7,34 @@ import {
   updateContactController,
   removeContact,
 } from '../controllers/contacts.js';
+import {
+  createContactSchema,
+  updateContactSchema,
+  validateBody,
+} from '../middlewares/validateBody.js';
+import { isValidId } from '../middlewares/isValidId.js';
 
 const router = Router();
 
 router.get('/', ctrlWrapper(getAllContactsController));
 
-router.get('/:contactId', ctrlWrapper(getContactByIDController));
+router.get('/:contactId', isValidId(), ctrlWrapper(getContactByIDController));
 
-router.post('/', json(), ctrlWrapper(createContactController));
+router.post(
+  '/',
+  json(),
+  validateBody(createContactSchema),
+  ctrlWrapper(createContactController),
+);
 
-router.patch('/:contactId', json(), ctrlWrapper(updateContactController));
+router.patch(
+  '/:contactId',
+  json(),
+  isValidId(),
+  validateBody(updateContactSchema),
+  ctrlWrapper(updateContactController),
+);
 
-router.delete('/:contactId', ctrlWrapper(removeContact));
+router.delete('/:contactId', isValidId(), ctrlWrapper(removeContact));
 
 export default router;

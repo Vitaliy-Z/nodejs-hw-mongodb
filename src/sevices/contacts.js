@@ -1,15 +1,62 @@
 import createHttpError from 'http-errors';
-import { contactModel } from '../models/constacts.js';
+import { contactModel } from '../db/models/constacts.js';
 
-export function findAllContacts() {
-  return contactModel.find();
-}
+export const findAllContacts = async ({
+  page,
+  perPage,
+  sortBy,
+  sortOrder,
+  filter,
+}) => {
+  if (page < 1) {
+    page = 1;
+  }
 
-export function findContactByID(id) {
+  const { contactType, phoneNumber, name, email, isFavourite } = filter;
+
+  const contactQueryModel = contactModel.find();
+
+  contactType && contactQueryModel.where('contactType').equals(contactType);
+  phoneNumber &&
+    contactQueryModel.where('phoneNumber').regex(new RegExp(phoneNumber, 'i'));
+  name && contactQueryModel.where('name').regex(new RegExp(name, 'i'));
+  email &&
+    contactQueryModel
+      .where('email')
+      .regex(new RegExp(`${email}(?=[^@]*@)`, 'i'));
+  isFavourite !== null &&
+    contactQueryModel.where('isFavourite').equals(isFavourite);
+
+  const totalItems = await contactModel.countDocuments(contactQueryModel);
+  const totalPages = Math.ceil(totalItems / perPage);
+
+  if (page > totalPages) {
+    page = totalPages;
+  }
+
+  const skip = page > 1 ? (page - 1) * perPage : 0;
+  const data = await contactQueryModel
+    .find()
+    .sort({ [sortBy]: sortOrder })
+    .skip(skip)
+    .limit(perPage);
+
+  return {
+    data,
+    page,
+    perPage,
+    totalItems,
+    totalPages,
+    hasPreviousPage: page > 1,
+    hasNextPage: page < totalPages,
+  };
+};
+
+export const findContactByID = (id) => {
   return contactModel.findById(id);
-}
+};
 
-export async function createContact(data) {
+export const createContact = async (data) => {
   const contact = await contactModel.findOne({ phoneNumber: data.phoneNumber });
 
   if (contact !== null) {
@@ -20,12 +67,12 @@ export async function createContact(data) {
   }
 
   return contactModel.create(data);
-}
+};
 
-export function updateContact(id, data) {
+export const updateContact = (id, data) => {
   return contactModel.findByIdAndUpdate(id, data, { new: true });
-}
+};
 
-export function deleteContact(id) {
+export const deleteContact = (id) => {
   return contactModel.findByIdAndDelete(id);
-}
+};
