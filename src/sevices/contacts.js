@@ -1,5 +1,5 @@
 import createHttpError from 'http-errors';
-import { contactModel } from '../db/models/constacts.js';
+import { contactModel } from '../db/models/models.js';
 
 export const findAllContacts = async ({
   page,
@@ -7,6 +7,7 @@ export const findAllContacts = async ({
   sortBy,
   sortOrder,
   filter,
+  userId,
 }) => {
   if (page < 1) {
     page = 1;
@@ -14,7 +15,7 @@ export const findAllContacts = async ({
 
   const { contactType, phoneNumber, name, email, isFavourite } = filter;
 
-  const contactQueryModel = contactModel.find();
+  const contactQueryModel = contactModel.find({ userId });
 
   contactType && contactQueryModel.where('contactType').equals(contactType);
   phoneNumber &&
@@ -52,8 +53,8 @@ export const findAllContacts = async ({
   };
 };
 
-export const findContactByID = (id) => {
-  return contactModel.findById(id);
+export const findContactByID = (contactId, userId) => {
+  return contactModel.findOne({ _id: contactId, userId });
 };
 
 export const createContact = async (data) => {
@@ -69,10 +70,12 @@ export const createContact = async (data) => {
   return contactModel.create(data);
 };
 
-export const updateContact = (id, data) => {
-  return contactModel.findByIdAndUpdate(id, data, { new: true });
+export const updateContact = (id, userId, data) => {
+  return contactModel.findOneAndUpdate({ _id: id, userId }, data, {
+    new: true,
+  });
 };
 
-export const deleteContact = (id) => {
-  return contactModel.findByIdAndDelete(id);
+export const deleteContact = (id, userId) => {
+  return contactModel.findOneAndDelete({ _id: id, userId });
 };

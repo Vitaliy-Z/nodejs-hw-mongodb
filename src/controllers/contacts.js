@@ -16,6 +16,7 @@ export async function getAllContactsController(req, res) {
   const { page, perPage } = parsePaginationParams(req.query);
   const { sortBy, sortOrder } = parseSortParams(req.query);
   const filter = parseFilterParams(req.query);
+  const userId = req.user._id;
 
   const data = await findAllContacts({
     page,
@@ -23,6 +24,7 @@ export async function getAllContactsController(req, res) {
     sortBy,
     sortOrder,
     filter,
+    userId,
   });
 
   res.status(200).json({
@@ -37,8 +39,9 @@ export async function getAllContactsController(req, res) {
 
 export async function getContactByIDController(req, res) {
   const { contactId } = req.params;
+  const userId = req.user._id;
 
-  const contact = await findContactByID(req.params.contactId);
+  const contact = await findContactByID(contactId, userId);
 
   if (contact === null) {
     throw createHttpError(404, `Contact with id ${contactId} not found`);
@@ -52,7 +55,7 @@ export async function getContactByIDController(req, res) {
 }
 
 export async function createContactController(req, res) {
-  const newContact = await createContact(req.body);
+  const newContact = await createContact({ ...req.body, userId: req.user._id });
 
   res.status(201).json({
     status: 201,
@@ -62,10 +65,14 @@ export async function createContactController(req, res) {
 }
 
 export async function updateContactController(req, res) {
-  const updatedContact = await updateContact(req.params.contactId, req.body);
+  const updatedContact = await updateContact(
+    req.params.contactId,
+    req.user._id,
+    req.body,
+  );
 
   if (updatedContact === null) {
-    throw new createHttpError(
+    throw createHttpError(
       404,
       `Contact with id ${req.params.contactId} is not found`,
     );
@@ -79,7 +86,10 @@ export async function updateContactController(req, res) {
 }
 
 export async function removeContact(req, res) {
-  const deletedContact = await deleteContact(req.params.contactId);
+  const deletedContact = await deleteContact(
+    req.params.contactId,
+    req.user._id,
+  );
 
   if (deletedContact === null) {
     throw createHttpError(
