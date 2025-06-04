@@ -58,7 +58,10 @@ export const findContactByID = (contactId, userId) => {
 };
 
 export const createContact = async (data) => {
-  const contact = await contactModel.findOne({ phoneNumber: data.phoneNumber });
+  const contact = await contactModel.findOne({
+    phoneNumber: data.phoneNumber,
+    userId: data.userId,
+  });
 
   if (contact !== null) {
     throw new createHttpError(
