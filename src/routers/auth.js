@@ -5,9 +5,16 @@ import {
   logoutController,
   refreshController,
   registerController,
+  requestResetPasswordController,
+  resetPasswordController,
 } from '../controllers/auth.js';
 import { validateBody } from '../middlewares/validateBody.js';
-import { registerUserShema, loginUserShema } from '../validation/auth.js';
+import {
+  registerUserShema,
+  loginUserShema,
+  requestResetPasswordUserShema,
+  resetPasswordUserShema,
+} from '../validation/auth.js';
 
 const authRouter = Router();
 
@@ -25,5 +32,17 @@ authRouter.post(
 
 authRouter.post('/refresh', ctrlWrapper(refreshController));
 authRouter.post('/logout', ctrlWrapper(logoutController));
+
+authRouter.post(
+  '/send-reset-email',
+  validateBody(requestResetPasswordUserShema),
+  ctrlWrapper(requestResetPasswordController),
+);
+
+authRouter.post(
+  '/reset-pwd',
+  validateBody(resetPasswordUserShema),
+  ctrlWrapper(resetPasswordController),
+);
 
 export default authRouter;
