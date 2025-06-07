@@ -1,3 +1,4 @@
+import fs from 'node:fs/promises';
 import createHttpError from 'http-errors';
 import {
   findAllContacts,
@@ -11,6 +12,7 @@ import {
   parsePaginationParams,
   parseSortParams,
 } from '../utils/parseQueryParams.js';
+import { uploadToCloudinary } from '../utils/uploadToCloudinary.js';
 
 export async function getAllContactsController(req, res) {
   const { page, perPage } = parsePaginationParams(req.query);
@@ -55,7 +57,15 @@ export async function getContactByIDController(req, res) {
 }
 
 export async function createContactController(req, res) {
-  const newContact = await createContact({ ...req.body, userId: req.user._id });
+  const imageData = await uploadToCloudinary(req.file.path);
+
+  await fs.unlink(req.file.path);
+
+  const newContact = await createContact({
+    ...req.body,
+    userId: req.user._id,
+    photo: imageData.secure_url,
+  });
 
   res.status(201).json({
     status: 201,
