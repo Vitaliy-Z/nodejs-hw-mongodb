@@ -8,3 +8,11 @@ cloudinary.config({
 
 export const uploadToCloudinary = (filePath) =>
   cloudinary.uploader.upload(filePath);
+
+export const removeInCloudinary = (filePath) => {
+  const photoId = filePath.split('/').at(-1).split('.')[0];
+
+  console.log(' photoId:', photoId);
+
+  return cloudinary.uploader.destroy(photoId);
+};

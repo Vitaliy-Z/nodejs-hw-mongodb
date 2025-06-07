@@ -12,7 +12,10 @@ import {
   parsePaginationParams,
   parseSortParams,
 } from '../utils/parseQueryParams.js';
-import { uploadToCloudinary } from '../utils/uploadToCloudinary.js';
+import {
+  removeInCloudinary,
+  uploadToCloudinary,
+} from '../utils/uploadToCloudinary.js';
 
 export async function getAllContactsController(req, res) {
   const { page, perPage } = parsePaginationParams(req.query);
@@ -57,14 +60,16 @@ export async function getContactByIDController(req, res) {
 }
 
 export async function createContactController(req, res) {
-  const imageData = await uploadToCloudinary(req.file.path);
+  if (req.file) {
+    const imageData = await uploadToCloudinary(req.file.path);
+    req.body.photo = imageData.secure_url;
 
-  await fs.unlink(req.file.path);
+    await fs.unlink(req.file.path);
+  }
 
   const newContact = await createContact({
     ...req.body,
     userId: req.user._id,
-    photo: imageData.secure_url,
   });
 
   res.status(201).json({
@@ -75,18 +80,37 @@ export async function createContactController(req, res) {
 }
 
 export async function updateContactController(req, res) {
-  const updatedContact = await updateContact(
-    req.params.contactId,
-    req.user._id,
-    req.body,
-  );
+  const contact = await findContactByID(req.params.contactId, req.user._id);
 
-  if (updatedContact === null) {
+  if (contact === null) {
     throw createHttpError(
       404,
       `Contact with id ${req.params.contactId} is not found`,
     );
   }
+
+  if (req.file) {
+    const { result } = await removeInCloudinary(contact.photo);
+    console.log(' result:', result);
+
+    if (result !== 'ok') {
+      throw createHttpError(
+        507,
+        'Image could not be saved, please try again later',
+      );
+    }
+
+    const imageData = await uploadToCloudinary(req.file.path);
+    req.body.photo = imageData.secure_url;
+
+    await fs.unlink(req.file.path);
+  }
+
+  const updatedContact = await updateContact(
+    req.params.contactId,
+    req.user._id,
+    req.body,
+  );
 
   res.status(200).json({
     status: 200,
