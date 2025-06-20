@@ -1,0 +1,44 @@
+tags:
+  - Auth
+summary: Login user
+operationId: loginUser
+description: Login user in application
+security: []
+requestBody:
+  content:
+    application/json:
+      schema:
+        $ref: ../../../components/schemas/user/loginUser.yaml
+responses:
+  '200':
+    description: Successfully logged
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - status
+            - message
+            - data
+          properties:
+            status:
+              type: integer
+              example: 200
+            message:
+              type: string
+              example: Successfully logged an user!
+            data:
+              type: object
+              required:
+                - accessToken
+              properties:
+                accessToken:
+                  type: string
+                  description: Access token for this session
+                  example: zK9c82sD7yEogQoRYgib7QTrrOFrIMLU2DbR2GxG
+  '400':
+    $ref: ../../../components/responses/400-body.yaml
+  '401':
+    $ref: ../../../components/responses/401.yaml
+  '500':
+    $ref: ../../../components/responses/500.yaml

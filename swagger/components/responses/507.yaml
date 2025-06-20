@@ -1,0 +1,15 @@
+description: Saved Image Error
+content:
+  application/json:
+    schema:
+      type: object
+      required:
+        - status
+        - message
+      properties:
+        status:
+          type: integer
+          example: 507
+        message:
+          type: string
+          example: Image could not be saved, please try again later
